@@ -1,9 +1,11 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Documents/Blog/blog.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/coelho/Documents/Blog/blog.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = 'False'
 
 db = SQLAlchemy(app)
 
@@ -31,5 +33,23 @@ def post():
 def contact():
     return render_template('contact.html')
 
+@app.route('/add')
+def add():
+    return render_template('add.html')
+
+@app.route('/addpost', methods=['POST'])
+def addpost():
+    title = request.form ['title']
+    subtitle = request.form ['subtitle']
+    author = request.form ['author']
+    content = request.form ['content']
+
+    post = Blogpost(title=title, subtitle=subtitle, author=author, content=content, date_posted=datetime.now())
+
+    db.session.add(post)
+    db.session.commit()
+
+    return redirect(url_for('index'))
+    
 if __name__ == '__main__':
     app.run(debug=True)
