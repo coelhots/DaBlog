@@ -1,11 +1,14 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
+basedir = os.path.abspath(os.path.dirname(__file__))
+
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/coelho/Documents/Blog/blog.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = 'False'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' +os.path.join(basedir, 'blog.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
@@ -19,15 +22,18 @@ class Blogpost(db.Model):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    posts = Blogpost.query.order_by(Blogpost.date_posted.desc()).all()
+    return render_template('index.html', posts=posts)
 
 @app.route('/about')
 def about():
     return render_template('about.html')
 
-@app.route('/post')
-def post():
-    return render_template('post.html')
+@app.route('/post/<int:post_id>')
+def post(post_id):
+    post = Blogpost.query.filter_by(id=post_id).one()
+
+    return render_template('post.html', post=post)
 
 @app.route('/contact')
 def contact():
