@@ -2,6 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.idea
+*.db
+.vscode
 
 # C extensions
 *.so
@@ -105,6 +108,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+blogvenv/
 .env
 .venv
 env/
