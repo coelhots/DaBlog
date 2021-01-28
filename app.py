@@ -6,8 +6,6 @@ app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/coelho/Documents/Blog/blog.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = 'False'
-##################################
-##################################
 
 db = SQLAlchemy(app)
 
