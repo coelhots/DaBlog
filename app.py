@@ -1,29 +1,61 @@
-import os
-from flask import Flask, render_template, request, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
+from blogproject import app,db
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask_login import login_user, login_required, logout_user
+from blogproject.models import User, Blogpost
+from blogproject.forms import LoginForm, RegistrationForm
 from datetime import datetime
-
-basedir = os.path.abspath(os.path.dirname(__file__))
-
-app = Flask(__name__)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' +os.path.join(basedir, 'blog.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-db = SQLAlchemy(app)
-
-class Blogpost(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(50))
-    subtitle = db.Column(db.String(50))
-    author = db.Column(db.String(20))
-    date_posted = db.Column(db.DateTime)
-    content = db.Column(db.Text)
 
 @app.route('/')
 def index():
     posts = Blogpost.query.order_by(Blogpost.date_posted.desc()).all()
     return render_template('index.html', posts=posts)
+
+@app.route('/welcome')
+@login_required
+def welcome_user():
+    return render_template('welcome_user.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash("You logged out!")
+    return redirect(url_for('index'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+
+        if user.check_password(form.password.data) and user is not None:
+
+            login_user(user)
+            flash('Logged in Sucessfully!')
+
+            next = request.args.get('next')
+
+            if next == None or not next[0]=='/':
+                next = url_for('welcome_user')
+
+            return redirect(next)
+        
+    return render_template('login.html', form=form)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegistrationForm()
+
+    if form.validate_on_submit():
+        user = User(email=form.email.data,
+                    username=form.username.data,
+                    password=form.password.data)
+        
+        db.session.add(user)
+        db.session.commit()
+        flash('Thanks for registering! Now you can login.')
+        return redirect(url_for('login'))
+    return render_template('register.html',form=form)
 
 @app.route('/about')
 def about():
